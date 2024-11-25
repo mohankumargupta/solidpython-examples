@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "solidpython-examples"
+version = "0.0.1"
+requires-python = ">=3.8"
+
+dependencies = [
+    "solidpython2 @ git+https://github.com/raspberrypisig/SolidPython",
+    "jupyterscad",
+    "ipykernel",
+    "ipywidgets",
+    "pythreejs"
+]
