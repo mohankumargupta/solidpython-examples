@@ -4,5 +4,6 @@
         "editor.defaultFormatter": "charliermarsh.ruff"
     },
     "editor.formatOnSave": true,
-    "editor.defaultFormatter": "charliermarsh.ruff"
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "git.postCommitCommand": "push"
 }

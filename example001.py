@@ -81,38 +81,65 @@ def quaternion_to_matrix(quaternion):
     )
 
 
-# Function to create the scene with a provided mesh and quaternion rotation
+def create_isometric_view(mesh):
+    """
+    Create an isometric view of the given mesh
+
+    Parameters:
+    - mesh: Trimesh object to visualize
+
+    Returns:
+    - None (displays the mesh)
+    """
+    # Add a reference axis for orientation
+    axis = trimesh.creation.axis(origin_size=2, axis_length=50)
+
+    # Create a scene
+    scene = trimesh.Scene([mesh, axis])
+
+    # Set up isometric-like view
+    # Rotate to approximate isometric perspective
+
+    # scene.set_camera(angles=[np.pi / 4, 0, np.pi / 4], distance=200)
+    # scene.set_camera(angles=[np.pi / 4, 0, 0], distance=200)
+    scene.set_camera(angles=[np.pi / 6, np.pi / 4, 0], distance=200)
+    return scene
+
+
+# Function to create the scene with the provided mesh and quaternion rotation
 def create_scene(mesh, quaternion):
-    # Create a simple axis to show as a reference
+    # Add a reference axis for orientation
     axis = trimesh.creation.axis(origin_size=2, axis_length=50)
 
     # Convert quaternion to 4x4 rotation matrix
     rotation_matrix = quaternion_to_matrix(quaternion)
 
     # Define the target (center of the box)
-    target = np.array([0, 0, 75 / 2])  # Adjust if needed for other meshes
+    # Adjust for specific mesh dimensions
+    target = np.array([0, 0, 75 / 2])
 
-    # Set the camera position (FreeCAD-style isometric view)
-    camera_direction = np.array([1, -1, 1])  # Isometric view direction
+    # Set the camera direction and position (isometric-style)
+    camera_direction = np.array([1, -1, 1])  # Isometric direction
     camera_direction = camera_direction / np.linalg.norm(camera_direction)  # Normalize
-    camera_distance = 150  # Adjust distance as needed
+    camera_distance = 200  # Move camera farther from the mesh
     camera_position = target + camera_direction * camera_distance
 
-    # Define the up direction (aligned with Z-axis)
-    up = np.array([0, 0, 1])
-
-    # Compute the forward vector (view direction)
+    # Compute forward (view direction), right, and up vectors
     forward = target - camera_position
     forward /= np.linalg.norm(forward)
-
-    # Compute the right vector (perpendicular to forward and up)
+    up = np.array([0, 0, 1])  # Default up direction
     right = np.cross(up, forward)
     right /= np.linalg.norm(right)
-
-    # Recompute the up vector (perpendicular to forward and right)
     up = np.cross(forward, right)
 
-    # Construct the camera rotation matrix (for view setup)
+    # Debug: Print camera placement
+    print(f"Camera Position: {camera_position}")
+    print(f"Target: {target}")
+    print(f"Forward Vector: {forward}")
+    print(f"Up Vector: {up}")
+    print(f"Right Vector: {right}")
+
+    # Construct the camera's rotation matrix
     camera_rotation_matrix = np.array(
         [
             [right[0], right[1], right[2], 0],
@@ -122,10 +149,14 @@ def create_scene(mesh, quaternion):
         ]
     )
 
-    # Combine the camera's rotation matrix and position into one transform
+    # Combine quaternion rotation and camera orientation
     camera_transform = np.dot(rotation_matrix, camera_rotation_matrix)
 
-    # Create the scene with mesh, axis, and apply the camera transform
+    # Set camera position explicitly to avoid being "inside" the tower
+    camera_transform[0:3, 3] = camera_position
+    camera_transform[3, 3] = 1
+
+    # Create a scene with the mesh and axis
     scene = trimesh.Scene([mesh, axis])
     scene.camera_transform = camera_transform
 
@@ -150,6 +181,7 @@ quaternion = (
     0.8204732639190053,
 )
 
-scene = create_scene(mesh, quaternion)
+# scene = create_scene(mesh, quaternion)
+scene = create_isometric_view(mesh)
 scene.show()
 # %%
