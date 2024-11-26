@@ -81,6 +81,38 @@ def quaternion_to_matrix(quaternion):
     )
 
 
+def find_boundary_edges(mesh):
+    """
+    Find boundary edges of a mesh manually
+
+    Parameters:
+    - mesh: Trimesh mesh object
+
+    Returns:
+    - Array of boundary edges
+    """
+    # Count face occurrences for each edge
+    edge_counts = {}
+    for face in mesh.faces:
+        # Create edges for the face
+        edges = [
+            tuple(sorted([face[0], face[1]])),
+            tuple(sorted([face[1], face[2]])),
+            tuple(sorted([face[2], face[0]])),
+        ]
+
+        # Count occurrences of each edge
+        for edge in edges:
+            edge_counts[edge] = edge_counts.get(edge, 0) + 1
+
+    # Identify boundary edges (edges that appear only once)
+    boundary_edges = [
+        np.array(list(edge)) for edge, count in edge_counts.items() if count == 1
+    ]
+
+    return np.array(boundary_edges)
+
+
 def create_isometric_view(mesh):
     """
     Create an isometric view of the given mesh
@@ -94,8 +126,23 @@ def create_isometric_view(mesh):
     # Add a reference axis for orientation
     axis = trimesh.creation.axis(origin_size=2, axis_length=50)
 
+    # edges = mesh.edges_normal
+    # edges_visual = trimesh.load_path(
+    #    mesh.vertices[edges],
+    #    color=[255, 0, 0],  # Black edges
+    # )
+    boundary_edges = find_boundary_edges(mesh)
+    boundary_path = None
+
+    # Add boundary edges in black
+    if len(boundary_edges) > 0:
+        boundary_path = trimesh.load_path(
+            mesh.vertices[boundary_edges],
+            color=[0, 0, 0],  # Black boundary edges
+        )
+
     # Create a scene
-    scene = trimesh.Scene([mesh, axis])
+    scene = trimesh.Scene([mesh, boundary_path, axis])
 
     # Set up isometric-like view
     # Rotate to approximate isometric perspective
@@ -103,6 +150,7 @@ def create_isometric_view(mesh):
     # scene.set_camera(angles=[np.pi / 4, 0, np.pi / 4], distance=200)
     # scene.set_camera(angles=[np.pi / 4, 0, 0], distance=200)
     scene.set_camera(angles=[np.pi / 6, np.pi / 4, 0], distance=200)
+    # scene.set_camera(angles=[0, 0, 0], distance=200)
     return scene
 
 
@@ -173,6 +221,7 @@ save_as_scad_and_stl(part, __file__)
 
 
 mesh = trimesh.load("example001.stl")
+mesh.visual.face_colors = [238, 118, 0]
 # Example quaternion (this is the one you mentioned)
 quaternion = (
     0.4247081321999479,
