@@ -1,0 +1,8 @@
+view=Gui.ActiveDocument.ActiveView
+
+when i run 
+cn.getCameraOrientation()
+
+i get back
+
+Rotation (0.4247081321999479, 0.1759200437218226, 0.339851090706265, 0.8204732639190053)
